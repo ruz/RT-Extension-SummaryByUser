@@ -1,0 +1,79 @@
+=== share/html/Search/Chart
+==================================================================
+--- share/html/Search/Chart	(revision 20100)
++++ share/html/Search/Chart	(local)
+@@ -68,10 +68,9 @@
+ 
+ use RT::Report::Tickets;
+ my $tix = RT::Report::Tickets->new( $session{'CurrentUser'} );
+-$tix->FromSQL( $Query );
+-my $count_name = $tix->Column( FUNCTION => 'COUNT', FIELD => 'id' );
+-$tix->GroupBy( FIELD => $PrimaryGroupBy );
+-my $value_name = $tix->Column( FIELD => $PrimaryGroupBy );
++my ($count_name, $value_name) = $tix->SetupGroupings(
++    Query => $Query, GroupBy => $PrimaryGroupBy,
++);
+ 
+ my $chart = $chart_class->new( 600 => 400 );
+ 
+=== share/html/Search/Elements/Chart
+==================================================================
+--- share/html/Search/Elements/Chart	(revision 20100)
++++ share/html/Search/Elements/Chart	(local)
+@@ -54,10 +54,9 @@
+ <%init>
+ use RT::Report::Tickets;
+ my $tix = RT::Report::Tickets->new( $session{'CurrentUser'} );
+-$tix->FromSQL( $Query );
+-my $count_name = $tix->Column( FUNCTION => 'COUNT', FIELD => 'id' );
+-$tix->GroupBy( FIELD => $PrimaryGroupBy );
+-my $value_name = $tix->Column( FIELD => $PrimaryGroupBy );
++my ($count_name, $value_name) = $tix->SetupGroupings(
++    Query => $Query, GroupBy => $PrimaryGroupBy,
++);
+ 
+ my %class = (
+     Queue => 'RT::Queue',
+=== lib/RT/Report/Tickets.pm
+==================================================================
+--- lib/RT/Report/Tickets.pm	(revision 20100)
++++ lib/RT/Report/Tickets.pm	(local)
+@@ -119,11 +119,28 @@
+     return $self->CurrentUser->loc($field);
+ }
+ 
++sub SetupGroupings {
++    my $self = shift;
++    my %args = (Query => undef, GroupBy => undef, @_);
++
++    $self->FromSQL( $args{'Query'} );
++    my @group_by = ref( $args{'GroupBy'} )? @{ $args{'GroupBy'} } : ($args{'GroupBy'});
++    $self->GroupBy( FIELD => $_ ) foreach @group_by;
++
++    # UseSQLForACLChecks may add late joins
++    my $joined = ($self->_isJoined || RT->Config->Get('UseSQLForACLChecks')) ? 1 : 0;
++
++    my @res;
++    push @res, $self->Column( FUNCTION => ($joined? 'DISTINCT COUNT' : 'COUNT'), FIELD => 'id' );
++    push @res, map $self->Column( FIELD => $_ ), @group_by;
++    return @res;
++}
++
+ sub GroupBy {
+     my $self = shift;
+     my %args = ref $_[0]? %{ $_[0] }: (@_);
+ 
+-    $self->{'_group_by_field'} = $args{'FIELD'};
++    push @{ $self->{'_group_by_field'} ||= [] }, $args{'FIELD'};
+     %args = $self->_FieldToFunction( %args );
+ 
+     $self->SUPER::GroupBy( \%args );
+@@ -252,7 +269,7 @@
+ 
+ sub AddEmptyRows {
+     my $self = shift;
+-    if ( $self->{'_group_by_field'} eq 'Status' ) {
++    if ( @{ $self->{'_group_by_field'} || [] } == 1 && $self->{'_group_by_field'}[0] eq 'Status' ) {
+         my %has = map { $_->__Value('Status') => 1 } @{ $self->ItemsArrayRef || [] };
+ 
+         foreach my $status ( grep !$has{$_}, RT::Queue->new($self->CurrentUser)->StatusArray ) {
