@@ -12,6 +12,9 @@ DESCRIPTION
 
     Don't forget to register plugin in the @Plugins config option.
 
+REPOSITORY
+        http://github.com/ruz/RT-Extension-SummaryByUser
+
 AUTHOR
     Ruslan Zakirov <Ruslan.Zakirov@gmail.com>
 

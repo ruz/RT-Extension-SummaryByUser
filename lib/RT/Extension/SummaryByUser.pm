@@ -22,6 +22,10 @@ updated as well, and you need 1.55_01 or newer.
 
 Don't forget to B<register plugin> in the C<@Plugins> config option.
 
+=head1 REPOSITORY
+
+    http://github.com/ruz/RT-Extension-SummaryByUser
+
 =head1 AUTHOR
 
 Ruslan Zakirov E<lt>Ruslan.Zakirov@gmail.comE<gt>
