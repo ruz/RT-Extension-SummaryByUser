@@ -1,0 +1,62 @@
+<div class="ticket-overview">
+<&|/Widgets/TitleBox, title => loc("Summary by owner"), bodyclass => "", &>
+<table border="0" cellspacing="0" cellpadding="1" width="100%" class="owner-summary">
+<tr>
+<th class="collection-as-table"><&|/l&>Owner</&></th>
+% for my $status (@statuses) {
+<th class="collection-as-table"><% loc($status) %></th>
+% }
+</tr>
+<%PERL>
+my $i = 0;
+for my $uid (sort { $display{$a} cmp $display{$b} } keys %table) {
+    my $all_q = "Owner = $uid AND ($status_cond)";
+
+    $i++;
+    $m->out('<tr class="'. ($i%2 ? 'oddline' : 'evenline') .'" >' );
+</%PERL>
+<td><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $all_q |u,n %>" title=""><% $display{$uid} |n %></a></td>
+%   for my $status (@statuses) {
+%       my $cond = "Owner = $uid AND Status = '$status'";
+%       if (my $count = $table{$uid}{$status} ) {
+<td align="right"><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $cond |u,n %>"><% $count %></a></td>
+%       } else {
+<td align="right">-</td>
+%       }
+%   }
+</tr>
+% }
+</table>
+</&>
+</div>
+<%INIT>
+my @statuses = RT->Config->Get('ActiveStatus');
+
+my $status_cond = join 'OR', map "Status = '$_'", @statuses;
+
+use RT::Report::Tickets;
+my $tix = RT::Report::Tickets->new( $session{'CurrentUser'} );
+my ($count_field, $owner_field, $status_field) = $tix->SetupGroupings(
+    Query => $status_cond, GroupBy => ['Owner.id', 'Status'],
+);
+
+my (%table, %display) = ();
+while ( my $entry = $tix->Next ) {
+    my $uid = $entry->__Value( $owner_field );
+
+    unless ( $display{ $uid } ) {
+        my $owner = RT::User->new( $RT::SystemUser );
+        $owner->Load( $uid );
+        unless ( $owner->id ) {
+            $RT::Logger->error( "Couldn't load user $uid");
+            next;
+        }
+        $display{$uid} = $m->scomp('/Elements/ShowUser', User => $owner );
+    }
+
+    my $status = $entry->__Value( $status_field );
+    my $count = $entry->__Value( $count_field );
+
+    $table{$uid}{$status} = $count;
+}
+</%INIT>
