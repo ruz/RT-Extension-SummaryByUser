@@ -6,9 +6,11 @@ DESCRIPTION
     dashboard and/or RT at glance. To make it available you must register it
     in the RT config using $HomepageComponents option. For more correct
     results and work without errors in any version prior to RT 3.8.5 you
-    must apply patch that is shipped with this distribution in the patches
-    directory. Also, DBIx::SearchBuilder has been updated as well, and you
-    need 1.55_01 or newer.
+    must apply patches that is shipped with this distribution in the patches
+    directory. First of all apply RT-3.8.4-chart-improvements.patch then
+    RT-3.8-use_distinct_count_for_charts_when_required-2.patch. Also,
+    DBIx::SearchBuilder has been updated as well, and you need 1.56 or
+    newer.
 
     Don't forget to register plugin in the @Plugins config option.
 
