@@ -1,5 +1,6 @@
 CHANGES
 html/Elements/OwnerSummary
+html/Elements/RequestorSummary
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
