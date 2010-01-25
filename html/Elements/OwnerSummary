@@ -1,25 +1,26 @@
 <div class="ticket-overview">
-<&|/Widgets/TitleBox, title => loc("Summary by owner"), bodyclass => "" &>
+<&|/Widgets/TitleBox, title => $title, bodyclass => "" &>
 <table border="0" cellspacing="0" cellpadding="1" width="100%" class="queue-summary">
 <tr>
-<th class="collection-as-table"><&|/l&>Owner</&></th>
+<th class="collection-as-table"><% loc($Field || $Role) %></th>
 % for my $status (@statuses) {
 <th class="collection-as-table"><% loc($status) %></th>
 % }
 </tr>
 <%PERL>
 my $i = 0;
-for my $uid (sort { $display{$a} cmp $display{$b} } keys %table) {
-    my $all_q = "Owner = $uid AND ($status_cond)";
+for my $uinfo (sort { $display{$a} cmp $display{$b} } keys %table) {
+    my $user_cond = $Role . ( $Field ? ".$Field = '$uinfo'" : " = $uinfo" );
+    my $all_q = "$user_cond AND ($status_cond)";
 
     $i++;
     $m->out('<tr class="'. ($i%2 ? 'oddline' : 'evenline') .'" >' );
 </%PERL>
-<td><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $all_q |u,n %>" title=""><% $display{$uid} |n %></a></td>
+<td><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $all_q |uhn %>" title=""><% $display{$uinfo} |n %></a></td>
 %   for my $status (@statuses) {
-%       my $cond = "Owner = $uid AND Status = '$status'";
-%       if (my $count = $table{$uid}{$status} ) {
-<td align="right"><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $cond |u,n %>"><% $count %></a></td>
+%       if ( my $count = $table{$uinfo}{$status} ) {
+%           my $cond = "$user_cond AND Status = '$status'";
+<td align="right"><a href="<% RT->Config->Get('WebPath') %>/Search/Results.html?Query=<% $cond |uhn %>"><% $count %></a></td>
 %       } else {
 <td align="right">-</td>
 %       }
@@ -29,34 +30,64 @@ for my $uid (sort { $display{$a} cmp $display{$b} } keys %table) {
 </table>
 </&>
 </div>
+<%ARGS>
+$Role => 'Owner'
+$Field => undef
+</%ARGS>
 <%INIT>
-my @statuses = RT->Config->Get('ActiveStatus');
 
+my $title;
+if ( $Role eq 'Owner' ) {
+    $title = loc('Summary by owner');
+} elsif ( $Role eq 'Creator' ) {
+    $title = loc('Summary by creator');
+} elsif ( $Role eq 'Requestor' ) {
+    $title = loc('Summary by requestor');
+} elsif ( $Role eq 'Cc' ) {
+    $title = loc('Summary by cc');
+} elsif ( $Role eq 'AdminCc' ) {
+    $title = loc('Summary by admin cc');
+} else {
+    $RT::Logger->error("Unknown role '$Role'");
+    return;
+}
+
+$Field = undef if $Field && ($Field eq 'Name' || $Field eq 'EmailAddress');
+$title .= ' ('. loc($Field) .')' if $Field;
+
+my @statuses = RT->Config->Get('ActiveStatus');
 my $status_cond = join 'OR', map "Status = '$_'", @statuses;
 
 use RT::Report::Tickets;
 my $tix = RT::Report::Tickets->new( $session{'CurrentUser'} );
-my ($count_field, $owner_field, $status_field) = $tix->SetupGroupings(
-    Query => $status_cond, GroupBy => ['Owner.id', 'Status'],
+my ($count_field, $user_field, $status_field) = $tix->SetupGroupings(
+    Query   => $status_cond,
+    GroupBy => [ $Role .'.'. ($Field || 'id'), 'Status' ],
 );
 
 my (%table, %display) = ();
 while ( my $entry = $tix->Next ) {
-    my $uid = $entry->__Value( $owner_field );
+    my $uinfo = $entry->__Value( $user_field );
+    $uinfo = '' unless defined $uinfo;
 
-    unless ( $display{ $uid } ) {
-        my $owner = RT::User->new( $RT::SystemUser );
-        $owner->Load( $uid );
-        unless ( $owner->id ) {
-            $RT::Logger->error( "Couldn't load user $uid");
-            next;
+    unless ( $display{ $uinfo } ) {
+        unless ( $Field ) {
+            my $user = RT::User->new( $RT::SystemUser );
+            $user->Load( $uinfo );
+            unless ( $user->id ) {
+                $RT::Logger->error( "Couldn't load user $uinfo");
+                next;
+            }
+            $display{$uinfo} = $m->scomp('/Elements/ShowUser', User => $user );
+        } else {
+            $display{$uinfo} = $uinfo;
+            $display{$uinfo} = loc('(no value)') unless length $uinfo;
         }
-        $display{$uid} = $m->scomp('/Elements/ShowUser', User => $owner );
     }
 
     my $status = $entry->__Value( $status_field );
     my $count = $entry->__Value( $count_field );
 
-    $table{$uid}{$status} = $count;
+    $table{$uinfo}{$status} = $count;
 }
 </%INIT>
