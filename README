@@ -2,17 +2,44 @@ NAME
     RT::Extension::SummaryByUser - portlets to show ticket counters per user
 
 DESCRIPTION
-    This extension ships with OwnerSummary portlet you can use in a
-    dashboard and/or RT at glance. To make it available you must register it
-    in the RT config using $HomepageComponents option. For more correct
-    results and work without errors in any version prior to RT 3.8.5 you
-    must apply patches that is shipped with this distribution in the patches
-    directory. First of all apply RT-3.8.4-chart-improvements.patch then
+    This extension ships with OwnerSummary and RequestorSummary portlets you
+    can use in a dashboard and/or RT at glance. Summary can be displayed not
+    only by user, but by users' organization or other fields. For example
+    RequestorSummary portlet displays summary by requestors' organization.
+    Read more about this below in "CONFIGURATION" section.
+
+INSTALLATION
+    Installation goes as usual for RT extensions, but for older RT versions
+    you have to apply patches. For more correct results and work without
+    errors in any version prior to RT 3.8.5 you must apply patches that are
+    shipped with this distribution in the patches directory. First of all
+    apply RT-3.8.4-chart-improvements.patch then
     RT-3.8-use_distinct_count_for_charts_when_required-2.patch. Also,
     DBIx::SearchBuilder has been updated as well, and you need 1.56 or
     newer.
 
     Don't forget to register plugin in the @Plugins config option.
+
+    To make a portlet available in the Web UI you must register it in the RT
+    config using $HomepageComponents option.
+
+    More portlets can be created using this extension. Look into the
+    RequestorSummary file, it just calls OwnerSummary with arguments:
+
+        <%INIT>
+        return $m->comp( 'OwnerSummary', Role => 'Requestor', Field => 'Organization' );
+        </%INIT>
+
+    As you can see there is two arguments: 'Role' and 'Field'. Role can be
+    'Owner', 'Creator', 'Requestor', 'Cc' and 'AdminCc'. Field can be any
+    column from Users table or empty. The following fields make sence:
+    'Organization', 'Country', 'State' or 'City'. Empty value means that the
+    report is groupped by particular users.
+
+    You can copy this file into local/html/Elements directory with different
+    name, for example with RequestorCountrySummary, change arguments,
+    register the new portlet in $HomepageComponents, restart server and use
+    new portlet.
 
 REPOSITORY
         http://github.com/ruz/RT-Extension-SummaryByUser
@@ -22,4 +49,11 @@ AUTHOR
 
 LICENSE
     Under the same terms as perl itself.
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 31:
+        Unknown directive: =head
 
