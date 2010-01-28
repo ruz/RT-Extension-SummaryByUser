@@ -10,7 +10,11 @@
 <%PERL>
 my $i = 0;
 for my $uinfo (sort { $display{$a} cmp $display{$b} } keys %table) {
-    my $user_cond = $Role . ( $Field ? ".$Field = '$uinfo'" : " = $uinfo" );
+    my $user_cond = $Role . (
+        $Field
+            ? ".$Field". ( length $uinfo ? " = '$uinfo' : " IS NULL" )
+            : " = $uinfo"
+    );
     my $all_q = "$user_cond AND ($status_cond)";
 
     $i++;
