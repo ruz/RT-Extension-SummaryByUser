@@ -28,7 +28,7 @@ F<RT-3.8.4-chart-improvements.patch> then
 F<RT-3.8-use_distinct_count_for_charts_when_required-2.patch>. Also,
 L<DBIx::SearchBuilder> has been updated as well, and you need 1.56 or newer.
 
-=head CONFIGURATION
+=head1 CONFIGURATION
 
 Don't forget to B<register plugin> in the C<@Plugins> config option.
 
