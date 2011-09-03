@@ -59,7 +59,7 @@ if ( $Role eq 'Owner' ) {
 $Field = undef if $Field && ($Field eq 'Name' || $Field eq 'EmailAddress');
 $title .= ' ('. loc($Field) .')' if $Field;
 
-my @statuses = RT->Config->Get('ActiveStatus');
+my @statuses = RT::Queue->ActiveStatusArray;
 my $status_cond = join 'OR', map "Status = '$_'", @statuses;
 
 use RT::Report::Tickets;

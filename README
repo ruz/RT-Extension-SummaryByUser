@@ -18,6 +18,7 @@ INSTALLATION
     DBIx::SearchBuilder has been updated as well, and you need 1.56 or
     newer.
 
+CONFIGURATION
     Don't forget to register plugin in the @Plugins config option.
 
     To make a portlet available in the Web UI you must register it in the RT
@@ -49,11 +50,4 @@ AUTHOR
 
 LICENSE
     Under the same terms as perl itself.
-
-POD ERRORS
-    Hey! The above document had some coding errors, which are explained
-    below:
-
-    Around line 31:
-        Unknown directive: =head
 
