@@ -21,8 +21,10 @@ INSTALLATION
 CONFIGURATION
     Don't forget to register plugin in the @Plugins config option.
 
-    To make a portlet available in the Web UI you must register it in the RT
-    config using $HomepageComponents option.
+    To make a OwnerSummary or RequestorSummary available in the Web UI you
+    must register it in the RT config using $HomepageComponents option. Once
+    a portlet is registered in $HomepageComponents it can be added to your
+    homepage using the Edit link on RT at a Glance, or added to a Dashboard.
 
     More portlets can be created using this extension. Look into the
     RequestorSummary file, it just calls OwnerSummary with arguments:

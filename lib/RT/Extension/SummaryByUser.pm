@@ -32,8 +32,11 @@ L<DBIx::SearchBuilder> has been updated as well, and you need 1.56 or newer.
 
 Don't forget to B<register plugin> in the C<@Plugins> config option.
 
-To make a portlet available in the Web UI you B<must register> it in
-the RT config using C<$HomepageComponents> option.
+To make a F<OwnerSummary> or F<RequestorSummary> available in the Web UI
+you B<must register> it in the RT config using C<$HomepageComponents>
+option. Once a portlet is registered in C<$HomepageComponents> it can be
+added to your homepage using the Edit link on RT at a Glance, or added
+to a Dashboard.
 
 More portlets can be created using this extension. Look into the
 F<RequestorSummary> file, it just calls F<OwnerSummary> with arguments:
